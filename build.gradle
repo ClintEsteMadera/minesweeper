@@ -1,0 +1,156 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
+plugins {
+    id "java"
+    id "org.springframework.boot" version "2.3.1.RELEASE"
+    id "jacoco"
+    id "io.freefair.lombok" version "5.1.0"
+    id "com.samcgardner.hookup" version "1.0"
+}
+
+apply plugin: "io.spring.dependency-management"
+
+group = "com.jchiocchio"
+version = "0.0.1-SNAPSHOT"
+sourceCompatibility = "11"
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    testCompileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    jUnit5Version = "5.6.2"
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-json"
+    implementation "org.apache.commons:commons-lang3:3.11"
+    implementation "org.apache.commons:commons-collections4:4.4"
+    implementation "com.google.guava:guava:29.0-jre"
+    implementation "net.rakugakibox.spring.boot:orika-spring-boot-starter:1.9.0"
+    implementation 'com.vladmihalcea:hibernate-types-52:2.9.13'
+    implementation "org.springdoc:springdoc-openapi-ui:1.4.3"
+
+    runtimeOnly "com.h2database:h2"
+    runtimeOnly "org.postgresql:postgresql"
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: "junit", module: "junit"
+        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+
+    }
+    testImplementation "org.junit.jupiter:junit-jupiter:$jUnit5Version"
+    testCompile "org.junit.jupiter:junit-jupiter-params:$jUnit5Version"
+    testCompile "org.junit.platform:junit-platform-commons:1.6.2"
+    testCompile "org.mockito:mockito-junit-jupiter:3.4.4"
+
+}
+
+// The "test" task currently has no filters: it will run both unit + integration tests. This is because the Jacoco
+// plugin for Gradle only seems to be reading the execution metadata produced by the "test" task.
+// See https://github.com/gradle/gradle/issues/5898 for further information.
+
+/**
+ * Used either manually or during GIT pre-commit hook
+ */
+task unitTest(type: Test) {
+    filter {
+        exclude "**/*IntegrationTest.class"
+    }
+}
+
+/**
+ * Used either manually or during GIT pre-push hook
+ */
+task integrationTest(type: Test) {
+    mustRunAfter test
+    filter {
+        include "**/*IntegrationTest.class"
+    }
+    finalizedBy jacocoTestReport
+}
+
+// this could have been useful if we'd wanted to have "./gradlew build" including integ tests too, leaving it commented
+// outfor now until we make it work or finally give up on the idea of avoiding running both kind of tests when running
+// "./gradlew test"
+//build.dependsOn integrationTest
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+jacocoTestReport {
+    // overrides the default reading of /jacoco/test.exec, see https://github.com/gradle/gradle/issues/5898
+    // sourceSets sourceSets.main
+    // executionData = fileTree(buildDir).include("/jacoco/*.exec")
+
+    // or, alternatively
+
+    // adds the execution data of the integrationTest task to the default reading of /jacoco/test.exec
+    // executionData(integrationTest)
+
+    reports {
+        csv.enabled = false
+        xml.enabled = true
+        html.enabled = true
+        html.destination file("${buildDir}/reports/jacoco/html")
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = "INSTRUCTION"
+                value = "COVEREDRATIO"
+                minimum = 1.0
+            }
+        }
+        rule {
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = 1.0
+            }
+        }
+    }
+}
+
+tasks.withType(BootRun) {
+    def dotEnvFile = file(".env")
+    if (dotEnvFile.exists()) {
+        def lines = dotEnvFile.readLines()
+
+        if (!lines.isEmpty()) {
+            println "Using the following env variables from .env:"
+
+            lines.each() {
+                if (!it.isEmpty() && !it.startsWith("#")) {
+                    def pos = it.indexOf("=")
+                    def key = it.substring(0, pos)
+                    def value = it.substring(pos + 1)
+
+                    println "${key} = ${value}"
+                    systemProperty key, value
+                }
+            }
+        }
+    } else {
+        logger.warn("WARN: no .env file was found, if you don't provide environment variables, the app bootstrap might fail!")
+    }
+}
