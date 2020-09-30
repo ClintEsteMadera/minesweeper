@@ -14,7 +14,7 @@ REST API that implements the famous Minesweeper game.
 ## Configuration through environment variables
 | Environment Variable       | Description                                                    | Required | Default   |
 |----------------------------|----------------------------------------------------------------|----------|-----------|
-| SPRING_DATASOURCE_URL      | DB URL                                                         | no       | jdbc:postgresql://localhost:5432/postgres |
+| DATABASE_URL               | Fully qualified DB URL (includes user and password)            | no       | jdbc:postgresql://localhost:5432/postgres |
 | SPRING_DATASOURCE_USERNAME | DB Username                                                    | no       | postgres  |
 | SPRING_DATASOURCE_PASSWORD | DB Password                                                    | no       | admin     |
 | DB_MAX_POOL_SIZE           | Database max pool size                                         | no       | 100       |
