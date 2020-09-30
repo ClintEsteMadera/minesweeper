@@ -7,6 +7,8 @@ import com.jchiocchio.model.GameOutcome;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public enum CellUpdateAction {
     ADD_QUESTION_MARK {
@@ -26,6 +28,8 @@ public enum CellUpdateAction {
     },
     REVEAL {
         public void apply(Cell cell, Game game) {
+            checkArgument(!cell.isRevealed(), "Cannot reveal and already revealed cell");
+
             var board = game.getBoard();
 
             // either revealing all mines or all adjacent cells, will, in particular, also reveal "cell".

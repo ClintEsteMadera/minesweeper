@@ -18,6 +18,7 @@ import org.hibernate.annotations.Type;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 @Data
@@ -50,8 +51,8 @@ public class Board {
 
     @Transient
     public Cell getCellAt(int row, int column) {
-        Preconditions.checkArgument(this.rowIsInRange(row), format("Row %d is not in range", row));
-        Preconditions.checkArgument(this.rowIsInRange(column), format("Column %d is not in range", column));
+        checkArgument(this.rowIsInRange(row), format("Row %d is not in range", row));
+        checkArgument(this.rowIsInRange(column), format("Column %d is not in range", column));
 
         return this.cells[row][column];
     }
