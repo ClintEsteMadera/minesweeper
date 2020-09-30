@@ -35,8 +35,12 @@ public class BoardTestEntityFactory extends BaseTestEntityFactory<Board> {
         }
         
         public Board build() {
-            var board = new Board(this.rows, this.columns, 0);
+            if (this.rows == 0 || this.columns == 0) {
+                throw new IllegalStateException("'rows' and 'columns' are expected to be set before building a Board");
+            }
+            var board = new Board(this.rows, this.columns, 0); // zero mines, we will locate them at "buildCells()"
             board.setCells(this.buildCells(board));
+
             return board;
         }
 
@@ -44,6 +48,7 @@ public class BoardTestEntityFactory extends BaseTestEntityFactory<Board> {
             var cells = board.getCells();
             this.minesLocations.forEach(location -> cells[location.getLeft()][location.getRight()].setMine(true));
             board.recordMinesAround();
+            board.setMinesCount(this.minesLocations.size());
             
             return cells;
         }

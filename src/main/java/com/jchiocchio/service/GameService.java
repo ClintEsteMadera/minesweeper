@@ -1,5 +1,7 @@
 package com.jchiocchio.service;
 
+import java.util.UUID;
+
 import com.jchiocchio.dto.GameCreationData;
 import com.jchiocchio.dto.GameUpdate;
 import com.jchiocchio.model.Board;
@@ -10,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.String.format;
 
 @Slf4j
 @Service
@@ -28,8 +32,14 @@ public class GameService {
         return game;
     }
 
-    public Game updateGame(GameUpdate gameUpdate) {
-        var game = gameRepository.findByIdOrThrow(gameUpdate.getId());
+    public Game updateGame(UUID gameId, GameUpdate gameUpdate) {
+        var game = gameRepository.findByIdOrThrow(gameId);
+
+        if (game.isFinished()) {
+            throw new IllegalArgumentException(format("Cannot update a game that is already finished (%s)",
+                                                      game.getOutcome()));
+        }
+        
         var board = game.getBoard();
         var cell = board.getCellAt(gameUpdate.getRow(), gameUpdate.getColumn());
 

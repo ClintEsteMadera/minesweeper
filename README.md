@@ -118,11 +118,10 @@ Should return something like this:
 Now, if we were to attempt to "play" (and win!) the game, by updating the game/board previously created, we should do so
 by issuing a request like as follows:
 
-`PATCH http://localhost:8080/api/games`
+`PATCH http://localhost:8080/api/games/a695626b-bc15-422c-b1a2-1b31483be2e9`
 
 ```
 {
-    "id": "29585bf4-4953-4182-bfdc-38bea9020424",
     "row": 0,
     "column": 0,
     "cellUpdateAction": "REVEAL"

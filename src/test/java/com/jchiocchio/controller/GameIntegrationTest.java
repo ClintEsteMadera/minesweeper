@@ -1,8 +1,13 @@
 package com.jchiocchio.controller;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
+import com.jchiocchio.dto.CellUpdateAction;
 import com.jchiocchio.dto.GameCreationData;
+import com.jchiocchio.dto.GameUpdate;
+import com.jchiocchio.model.Cell;
+import com.jchiocchio.model.GameOutcome;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,6 +85,49 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .withContent(gameCreationData)
             .withExpectedStatus(status().isBadRequest())
             .andExpectErrorMessages(expectedErrorMessage)
+            .perform();
+    }
+
+    @Test
+    void updateGame_validInput_updatesGameAsExpected() {
+        /*
+        |-------------------------------|
+        |       | col 0 | col 1 | col 2 |
+        |-------|-------|-------|-------|
+        | row 0 | mine  |   1   |       |
+        | row 1 |   1   |   1   |       |
+        | row 2 |       |       |       |
+        |-------------------------------|
+         */
+        var board = boardTestEntityFactory.builder().rows(3).columns(3).mineAt(0, 0).build();
+        var game = gameTestEntityFactory.builder().board(board).build();
+
+        // prevents further changes to `game` be persisted, as, during tests execution, the Hibernate session remains open until the test finishes
+        this.gameTestEntityFactory.detachEntity(game);
+
+        // this should reveal everything except where the mine is at (0,0), thus, marking the game as "WON"
+        var gameUpdate = new GameUpdate();
+        gameUpdate.setRow(2);
+        gameUpdate.setColumn(2);
+        gameUpdate.setCellUpdateAction(CellUpdateAction.REVEAL); 
+
+        //noinspection UnnecessaryLocalVariable (variable aliasing for better readability)
+        var expectedGame = game;
+        var expectedBoard = game.getBoard();
+
+        // reveal all cells, except (0,0) 
+        Arrays.stream(expectedBoard.getCells())
+              .flatMap(Arrays::stream)
+              .filter(cell -> !(cell.getRow() == 0 && cell.getColumn() == 0))
+              .forEach(Cell::reveal);
+
+        expectedGame.setBoard(expectedBoard);
+        expectedGame.setOutcome(GameOutcome.WON);
+
+        patchById(game.getId())
+            .withContent(gameUpdate)
+            .withExpectedStatus(status().isOk())
+            .andExpectJsonContentOf(expectedGame)
             .perform();
     }
 

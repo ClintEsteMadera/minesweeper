@@ -10,6 +10,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jchiocchio.dto.GameDTO;
 import com.jchiocchio.mapping.DTO;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
@@ -44,4 +45,9 @@ public class Game {
     @Column
     @Enumerated(EnumType.STRING)
     private GameOutcome outcome;
+
+    @JsonIgnore
+    public boolean isFinished() {
+        return this.outcome != null;
+    }
 }

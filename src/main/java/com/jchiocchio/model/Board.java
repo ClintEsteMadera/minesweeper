@@ -36,7 +36,7 @@ public class Board {
     private int minesCount;
 
     @Type(type = "jsonb")
-    @Column
+    @Column(columnDefinition = "OTHER") // this works with both Postgres and H2 (used on Integration Tests)
     private Cell[][] cells;
 
     public Board(int rowsCount, int columnsCount, int minesCount) {

@@ -1,6 +1,9 @@
 package com.jchiocchio.controller;
 
+import java.util.UUID;
+
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import com.jchiocchio.dto.GameCreationData;
 import com.jchiocchio.dto.GameUpdate;
@@ -11,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,12 +36,13 @@ public class GameController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Game createGame(
-        @Validated(GameCreationData.ValidationGroup.class) @RequestBody GameCreationData creationData) {
+        @RequestBody @Validated(GameCreationData.ValidationGroup.class) GameCreationData creationData) {
         return gameService.createGame(creationData);
     }
 
-    @PatchMapping
-    public Game updateGame(@Valid @RequestBody GameUpdate update) {
-        return gameService.updateGame(update);
+    @PatchMapping("{gameId}")
+    public Game updateGame(@PathVariable @NotNull(message = "'id' is required") UUID gameId,
+                           @RequestBody @Valid GameUpdate update) {
+        return gameService.updateGame(gameId, update);
     }
 }

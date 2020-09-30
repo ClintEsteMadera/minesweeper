@@ -34,8 +34,10 @@ public class GameTestEntityFactory extends BaseTestEntityFactory<Game> {
                 this.name = "default game";
             }
             if (this.board == null) {
-                this.board = boardTestEntityFactory.builder().build();
+                // default to a board of 2x2 with a mine at (0,0)
+                this.board = boardTestEntityFactory.builder().rows(2).columns(2).mineAt(0,0).build();
             }
+            game.setName(name);
             game.setBoard(this.board);
     
             repository.save(game);

@@ -77,7 +77,7 @@ public abstract class BaseIntegrationTest {
     }
 
     MvcBuilder patchById(UUID id) {
-        String endpoint = id == null? "" : "%s";
+        String endpoint = id == null ? "" : "%s";
         return apiTestClient.patch(getBasePath(), endpoint, id);
     }
 
