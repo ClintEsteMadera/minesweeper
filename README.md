@@ -36,7 +36,7 @@ SPRING_DATASOURCE_PASSWORD=password123-is-not-secure!
 ...
 ```
 
-## Run the application
+## Run the application locally
 **NOTE:** It is assumed that prior to the execution of the app, the configured database must be up and running.
 
 ```
@@ -173,3 +173,10 @@ Similarly, if we proceed to further update the cells \[0, 1\] and \[1, 0\], we w
     "outcome": "WON"
 }
 ```
+
+## Run the application on the cloud
+
+The REST API is hosted at https://minesweeper2020.herokuapp.com. You can use any HTTP client such as Postman or play with
+it using its self-contained [Swagger UI](https://minesweeper2020.herokuapp.com/docs/api).
+
+The Open API v3 descriptor for this API can be found [here](https://minesweeper2020.herokuapp.com/docs/api-docs).
