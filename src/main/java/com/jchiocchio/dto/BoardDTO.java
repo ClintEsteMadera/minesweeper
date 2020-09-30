@@ -14,5 +14,11 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BoardDTO {
 
+    private int rowsCount;
+
+    private int columnsCount;
+
+    private int minesCount;
+
     private CellDTO[][] cells;
 }

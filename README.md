@@ -1,14 +1,14 @@
 # minesweeper
 REST API that implements the famous Minesweeper game.
 
-## Build and Test the API
+## Build, Unit Test and assemble fat JAR
 ```
-./gradlew build
+./gradlew unitTest assemble
 ```
 
-## Run Integration Tests (against an embedded DB in memory)
+## Build and Run Unit + Run Integration Tests (against an embedded DB in memory)
 ```
-./gradlew integrationTest
+./gradlew build
 ```
 
 ## Configuration through environment variables
@@ -58,9 +58,9 @@ if you want to leave the application suspended until you connect your debugger t
 
 ```
 {
-  "name": "My first game",
-  "rows": 3,
-  "columns": 3,
+  "name": "Super easy game",
+  "rowsCount": 2,
+  "columnsCount": 2,
   "minesCount": 1
 }
 ```
@@ -69,9 +69,12 @@ Should return something like this:
 
 ```
 {
-    "id": "913ab28e-19fd-4a38-924e-15964bf6f291",
-    "name": "My first game",
+    "id": "a695626b-bc15-422c-b1a2-1b31483be2e9",
+    "name": "Super easy game",
     "board": {
+        "rowsCount": 2,
+        "columnsCount": 2,
+        "minesCount": 1,
         "cells": [
             [
                 {
@@ -79,21 +82,14 @@ Should return something like this:
                     "column": 0,
                     "mine": false,
                     "revealed": false,
-                    "minesAround": 0
+                    "minesAround": 1
                 },
                 {
                     "row": 0,
                     "column": 1,
                     "mine": false,
                     "revealed": false,
-                    "minesAround": 0
-                },
-                {
-                    "row": 0,
-                    "column": 2,
-                    "mine": false,
-                    "revealed": false,
-                    "minesAround": 0
+                    "minesAround": 1
                 }
             ],
             [
@@ -102,41 +98,11 @@ Should return something like this:
                     "column": 0,
                     "mine": false,
                     "revealed": false,
-                    "minesAround": 0
-                },
-                {
-                    "row": 1,
-                    "column": 1,
-                    "mine": false,
-                    "revealed": false,
                     "minesAround": 1
                 },
                 {
                     "row": 1,
-                    "column": 2,
-                    "mine": false,
-                    "revealed": false,
-                    "minesAround": 1
-                }
-            ],
-            [
-                {
-                    "row": 2,
-                    "column": 0,
-                    "mine": false,
-                    "revealed": false,
-                    "minesAround": 0
-                },
-                {
-                    "row": 2,
                     "column": 1,
-                    "mine": false,
-                    "revealed": false,
-                    "minesAround": 1
-                },
-                {
-                    "row": 2,
-                    "column": 2,
                     "mine": true,
                     "revealed": false,
                     "minesAround": 0
@@ -149,27 +115,29 @@ Should return something like this:
 
 ### Update a Game
 
-Now, if we were to attempt to "play" the game, by updating the game/board previously created, we should do so by issuing
-a request like as follows:
+Now, if we were to attempt to "play" (and win!) the game, by updating the game/board previously created, we should do so
+by issuing a request like as follows:
 
-`PUT http://localhost:8080/api/games`
+`PATCH http://localhost:8080/api/games`
 
 ```
 {
-    "id": "913ab28e-19fd-4a38-924e-15964bf6f291",
+    "id": "29585bf4-4953-4182-bfdc-38bea9020424",
     "row": 0,
-    "column": 2,
+    "column": 0,
     "cellUpdateAction": "REVEAL"
 }
 ```
-
-Sample Response:
+Similarly, if we proceed to further update the cells \[0, 1\] and \[1, 0\], we will see the following (final) payload:
 
 ```
 {
-    "id": "913ab28e-19fd-4a38-924e-15964bf6f291",
-    "name": "My first game",
+    "id": "a695626b-bc15-422c-b1a2-1b31483be2e9",
+    "name": "Super easy game",
     "board": {
+        "rowsCount": 2,
+        "columnsCount": 2,
+        "minesCount": 1,
         "cells": [
             [
                 {
@@ -177,21 +145,14 @@ Sample Response:
                     "column": 0,
                     "mine": false,
                     "revealed": true,
-                    "minesAround": 0
+                    "minesAround": 1
                 },
                 {
                     "row": 0,
                     "column": 1,
                     "mine": false,
                     "revealed": true,
-                    "minesAround": 0
-                },
-                {
-                    "row": 0,
-                    "column": 2,
-                    "mine": false,
-                    "revealed": true,
-                    "minesAround": 0
+                    "minesAround": 1
                 }
             ],
             [
@@ -200,41 +161,11 @@ Sample Response:
                     "column": 0,
                     "mine": false,
                     "revealed": true,
-                    "minesAround": 0
-                },
-                {
-                    "row": 1,
-                    "column": 1,
-                    "mine": false,
-                    "revealed": true,
                     "minesAround": 1
                 },
                 {
                     "row": 1,
-                    "column": 2,
-                    "mine": false,
-                    "revealed": true,
-                    "minesAround": 1
-                }
-            ],
-            [
-                {
-                    "row": 2,
-                    "column": 0,
-                    "mine": false,
-                    "revealed": true,
-                    "minesAround": 0
-                },
-                {
-                    "row": 2,
                     "column": 1,
-                    "mine": false,
-                    "revealed": true,
-                    "minesAround": 1
-                },
-                {
-                    "row": 2,
-                    "column": 2,
                     "mine": true,
                     "revealed": false,
                     "minesAround": 0

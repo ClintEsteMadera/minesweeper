@@ -16,12 +16,12 @@ public class GameUpdate {
     @NotNull(message = "'id' is required")
     private UUID id;
 
-    @Min(2)
-    @Max(16)
+    @Min(value = 0, message = "'row' must be at least 0")
+    @Max(value = 15, message = "'row' must be at most 29")
     private int row;
 
-    @Min(2)
-    @Max(30)
+    @Min(value = 0, message = "'column' must be at least 0")
+    @Max(value = 29, message = "'column' must be at most 29")
     private int column;
 
     @NotNull(message = "'cellUpdateAction' is required")

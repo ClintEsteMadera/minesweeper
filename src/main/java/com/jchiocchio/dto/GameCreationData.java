@@ -7,33 +7,38 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.groups.Default;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class GameCreationData {
 
-    @NotEmpty
+    @NotEmpty(message = "'name' must not be empty")
     private String name;
 
-    @Min(2)
-    @Max(16)
-    private int rows;
+    @Min(value = 2, message = "'rowsCount' must be at least 2")
+    @Max(value = 16, message = "'rowsCount' must be at most 16")
+    private int rowsCount;
 
-    @Min(2)
-    @Max(30)
-    private int columns;
+    @Min(value = 2, message = "'columnsCount' must be at least 2")
+    @Max(value = 30, message = "'columnsCount' must be at most 30")
+    private int columnsCount;
 
-    @Min(1)
-    @Max(435)
+    @Min(value = 1, message = "'minesCount' must be at least 1")
+    @Max(value = 435, message = "'minesCount' must be at most 435")
     private int minesCount;
 
-    @AssertTrue(message = "The number of minesToo many data records requested. Please check your date period " +
-                          "and/or resolution and reduce your query to a max of 10,080 records",
-                groups = AfterDefaultValidationGroup.class)
+    @JsonIgnore
+    @AssertTrue(message = "Invalid number of mines requested", groups = AfterDefaultValidationGroup.class)
     public boolean isNumberOfMinesValid() {
-        return this.minesCount <= (this.rows - 1) * (this.columns - 1);
+        return this.minesCount <= (this.rowsCount - 1) * (this.columnsCount - 1);
     }
 
     /**

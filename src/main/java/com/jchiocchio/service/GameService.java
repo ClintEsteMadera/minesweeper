@@ -20,7 +20,7 @@ public class GameService {
 
     public Game createGame(GameCreationData creationData) {
         log.trace("Creating board for game {}...", creationData.getName());
-        var board = new Board(creationData.getRows(), creationData.getColumns(), creationData.getMinesCount());
+        var board = new Board(creationData.getRowsCount(), creationData.getColumnsCount(), creationData.getMinesCount());
 
         Game game = gameRepository.save(Game.builder().name(creationData.getName()).board(board).build());
         log.info("Game {} created", creationData.getName());

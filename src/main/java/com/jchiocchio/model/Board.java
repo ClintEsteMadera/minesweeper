@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.jchiocchio.dto.BoardDTO;
 import com.jchiocchio.mapping.DTO;
@@ -25,13 +26,25 @@ import static java.lang.String.format;
 @DTO(BoardDTO.class)
 public class Board {
 
+    @Column
+    private int rowsCount;
+
+    @Column
+    private int columnsCount;
+
+    @Column
+    private int minesCount;
+
     @Type(type = "jsonb")
-    @Column(columnDefinition = "jsonb")
+    @Column
     private Cell[][] cells;
 
-    public Board(int rows, int columns, int minesCount) {
-        this.cells = this.createCells(rows, columns);
-        this.placeMines(minesCount);
+    public Board(int rowsCount, int columnsCount, int minesCount) {
+        this.rowsCount = rowsCount;
+        this.columnsCount = columnsCount;
+        this.minesCount = minesCount;
+        this.cells = this.createCells();
+        this.placeMines();
         this.recordMinesAround();
     }
 
@@ -44,7 +57,7 @@ public class Board {
     }
 
     public void revealCellAndItsAdjacentsRecursively(int row, int column) {
-        if (row < 0 || row >= this.rowsCount() || column < 0 || column >= this.columnsCount()) {
+        if (row < 0 || row >= this.rowsCount || column < 0 || column >= this.columnsCount) {
             return;
         }
         var cell = this.getCellAt(row, column);
@@ -65,8 +78,8 @@ public class Board {
     }
 
     public void revealAllMines() {
-        for (int row = 0; row < this.rowsCount(); row++) {
-            for (int col = 0; col < this.columnsCount(); col++) {
+        for (int row = 0; row < this.rowsCount; row++) {
+            for (int col = 0; col < this.columnsCount; col++) {
                 var cell = this.getCellAt(row, col);
                 if (cell.isMine() && !cell.isRevealed()) {
                     cell.reveal();
@@ -81,35 +94,40 @@ public class Board {
                      .filter(cell -> !cell.isMine())
                      .allMatch(Cell::isRevealed);
     }
-    
-    private void recordMinesAround() {
-        for (int row = 0; row < this.rowsCount(); row++) {
-            for (int col = 0; col < this.columnsCount(); col++) {
+
+    /**
+     * For testing purposes, we make this method publicly accessible. In real life I would avoid doing this but for this
+     * challenge, I think it's tolerable.
+     */
+    @VisibleForTesting
+    public void recordMinesAround() {
+        for (int row = 0; row < this.rowsCount; row++) {
+            for (int col = 0; col < this.columnsCount; col++) {
                 this.cells[row][col].setMinesAround(this.countMinesNearby(row, col));
             }
         }
     }
 
-    private Cell[][] createCells(int rows, int columns) {
-        var cells = new Cell[rows][];
+    private Cell[][] createCells() {
+        var cells = new Cell[this.rowsCount][];
 
-        for (int row = 0; row < rows; row++) {
-            cells[row] = new Cell[columns];
+        for (int row = 0; row < this.rowsCount; row++) {
+            cells[row] = new Cell[this.columnsCount];
 
-            for (int col = 0; col < columns; col++) {
+            for (int col = 0; col < this.columnsCount; col++) {
                 cells[row][col] = new Cell(row, col);
             }
         }
         return cells;
     }
 
-    private void placeMines(int minesCount) {
+    private void placeMines() {
         int placed = 0;
         var random = new Random();
 
-        while (placed < minesCount) {
-            int row = random.nextInt(this.rowsCount());
-            int col = random.nextInt(this.columnsCount());
+        while (placed < this.minesCount) {
+            int row = random.nextInt(this.rowsCount);
+            int col = random.nextInt(this.columnsCount);
 
             if (!this.cells[row][col].isMine()) {
                 this.cells[row][col].setMine(true);
@@ -135,18 +153,10 @@ public class Board {
     }
 
     private boolean rowIsInRange(int row) {
-        return row >= 0 && row < this.rowsCount();
+        return row >= 0 && row < this.rowsCount;
     }
 
     private boolean columnIsInRange(int col) {
-        return col >= 0 && col < this.columnsCount();
-    }
-
-    private int rowsCount() {
-        return this.cells.length;
-    }
-
-    private int columnsCount() {
-        return this.cells[0].length;
+        return col >= 0 && col < this.columnsCount;
     }
 }
