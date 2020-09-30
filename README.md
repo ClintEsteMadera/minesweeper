@@ -12,18 +12,16 @@ REST API that implements the famous Minesweeper game.
 ```
 
 ## Configuration through environment variables
-| Environment Variable  | Description                                                    | Required | Default   |
-|-----------------------|----------------------------------------------------------------|----------|-----------|
-| DB_NAME               | Database name                                                  | no       | postgres  |
-| DB_HOSTNAME           | Database host                                                  | no       | localhost |
-| DB_PORT               | Database port                                                  | no       | 5432      |
-| DB_USERNAME           | Database username                                              | no       | postgres  |
-| DB_PASSWORD           | Database password                                              | no       | admin     |
-| DB_MAX_POOL_SIZE      | Database max pool size                                         | no       | 100       |
-| DB_CONNECTION_TIMEOUT | Database connection timeout                                    | no       | 30000     |
-| DB_POOL_MIN_IDLE      | Database min number of idle connection in the pool             | no       | 100       |
-| DB_POOL_IDLE_TIMEOUT  | Max time that a connection is allowed to sit idle in the pool  | no       | 600000    |
-| ENVIRONMENT           | Runtime environment the API is running at                      | no       | local     | 
+| Environment Variable       | Description                                                    | Required | Default   |
+|----------------------------|----------------------------------------------------------------|----------|-----------|
+| SPRING_DATASOURCE_URL      | DB URL                                                         | no       | jdbc:postgresql://localhost:5432/postgres |
+| SPRING_DATASOURCE_USERNAME | DB Username                                                    | no       | postgres  |
+| SPRING_DATASOURCE_PASSWORD | DB Password                                                    | no       | admin     |
+| DB_MAX_POOL_SIZE           | Database max pool size                                         | no       | 100       |
+| DB_CONNECTION_TIMEOUT      | Database connection timeout                                    | no       | 30000     |
+| DB_POOL_MIN_IDLE           | Database min number of idle connection in the pool             | no       | 100       |
+| DB_POOL_IDLE_TIMEOUT       | Max time that a connection is allowed to sit idle in the pool  | no       | 600000    |
+| ENVIRONMENT                | Runtime environment the API is running at                      | no       | local     | 
 
 ### Local environment
 In order to ease the execution of the application in a local environment, we support dotenv (`.env`) files that, when
@@ -32,9 +30,9 @@ the typical `export VAR=value` mechanism. If you want to override any of the sen
 above, you might want to create a `.env` file at the root of this project, following this sample pattern:
 
 ```
-DB_NAME=my-db
-DB_HOSTNAME=some-cloud-host
-DB_PORT=9876
+SPRING_DATASOURCE_URL=jdbc:postgresql://someHost:9876/some_db_name
+SPRING_DATASOURCE_USERNAME=some-funky-user
+SPRING_DATASOURCE_PASSWORD=password123-is-not-secure!
 ...
 ```
 
