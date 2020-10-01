@@ -20,8 +20,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GameCreationData {
 
-    @NotEmpty(message = "'name' must not be empty")
-    private String name;
+    @NotEmpty(message = "'username' must not be empty")
+    private String username;
 
     @Min(value = 2, message = "'rowsCount' must be at least 2")
     @Max(value = 16, message = "'rowsCount' must be at most 16")

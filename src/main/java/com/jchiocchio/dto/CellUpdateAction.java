@@ -34,13 +34,13 @@ public enum CellUpdateAction {
 
             // either revealing all mines or all adjacent cells, will, in particular, also reveal "cell".
             if (cell.isMine()) {
-                log.info("Mine Revealed. Game {} is over.", game.getName());
+                log.info("[Game {}] Mine Revealed. Game over.", game.getId());
                 game.setOutcome(GameOutcome.LOST);
                 board.revealAllMines();
             } else {
                 board.revealCellAndItsAdjacentsRecursively(cell.getRow(), cell.getColumn());
                 if (board.allNonMineCellsAreRevealed()) {
-                    log.info("All empty cells were revealed. You win the Game {}!", game.getName());
+                    log.info("[Game {}] All empty cells were revealed. You win!", game.getId());
                     game.setOutcome(GameOutcome.WON);
                 }
             }

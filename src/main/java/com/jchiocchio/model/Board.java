@@ -27,17 +27,17 @@ import static java.lang.String.format;
 @DTO(BoardDTO.class)
 public class Board {
 
-    @Column
+    @Column(nullable = false)
     private int rowsCount;
 
-    @Column
+    @Column(nullable = false)
     private int columnsCount;
 
-    @Column
+    @Column(nullable = false)
     private int minesCount;
 
     @Type(type = "jsonb")
-    @Column(columnDefinition = "OTHER") // this works with both Postgres and H2 (used on Integration Tests)
+    @Column(nullable = false, columnDefinition = "OTHER") // this works with both Postgres and H2 (used on Integration Tests)
     private Cell[][] cells;
 
     public Board(int rowsCount, int columnsCount, int minesCount) {

@@ -2,6 +2,8 @@ package com.jchiocchio.service;
 
 import java.util.UUID;
 
+import javax.persistence.EntityNotFoundException;
+
 import com.jchiocchio.dto.GameCreationData;
 import com.jchiocchio.dto.GameUpdate;
 import com.jchiocchio.model.Board;
@@ -22,12 +24,23 @@ public class GameService {
     @Autowired
     private GameRepository gameRepository;
 
-    public Game createGame(GameCreationData creationData) {
-        log.trace("Creating board for game {}...", creationData.getName());
-        var board = new Board(creationData.getRowsCount(), creationData.getColumnsCount(), creationData.getMinesCount());
+    @Autowired
+    private UserService userService;
 
-        Game game = gameRepository.save(Game.builder().name(creationData.getName()).board(board).build());
-        log.info("Game {} created", creationData.getName());
+    public Game createGame(GameCreationData creationData) {
+        var username = creationData.getUsername();
+
+        log.info("Creating board for game {}...", username);
+
+        if (!userService.doesUserExist(username)) {
+            throw new EntityNotFoundException(format("User %s does not exist", username));
+        }
+        var board =
+            new Board(creationData.getRowsCount(), creationData.getColumnsCount(), creationData.getMinesCount());
+
+        Game game = gameRepository.save(Game.builder().username(username).board(board).build());
+
+        log.info("Game {} created", username);
 
         return game;
     }
@@ -39,7 +52,7 @@ public class GameService {
             throw new IllegalArgumentException(format("Cannot update a game that is already finished (%s)",
                                                       game.getOutcome()));
         }
-        
+
         var board = game.getBoard();
         var cell = board.getCellAt(gameUpdate.getRow(), gameUpdate.getColumn());
 

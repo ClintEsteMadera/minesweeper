@@ -38,14 +38,14 @@ public class Game {
     @GeneratedValue
     private UUID id;
 
-    @Column
-    private String name;
+    @Column(nullable = false)
+    private String username;
 
-    @Column
     @Embedded
+    @Column(nullable = false)
     private Board board;
 
-    @Column
+    @Column(nullable = false)
     private LocalDateTime created;
 
     @Column

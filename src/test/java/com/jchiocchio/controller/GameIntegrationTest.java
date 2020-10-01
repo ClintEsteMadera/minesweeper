@@ -30,6 +30,7 @@ import static com.jchiocchio.dto.CellUpdateAction.ADD_QUESTION_MARK;
 import static com.jchiocchio.dto.CellUpdateAction.ADD_RED_FLAG;
 import static com.jchiocchio.dto.CellUpdateAction.REVEAL;
 import static com.jchiocchio.dto.CellUpdateAction.UNFLAG;
+import static com.jchiocchio.entityfactory.GameTestEntityFactory.DEFAULT_USERNAME;
 import static java.lang.String.format;
 import static java.time.LocalDateTime.now;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -55,8 +56,6 @@ class GameIntegrationTest extends BaseIntegrationTest {
     private static final Integer VALID_COLUMN = 1; // this one has an implicit relationship with VALID_COLUMNS_COUNT
 
     private static final Integer VALID_MINE_COUNT = 3;
-
-    private static final String VALID_GAME_NAME = "some game name";
 
     private static final String MIN_MSG_PATTERN = "'%s' must be at least %d";
 
@@ -84,7 +83,7 @@ class GameIntegrationTest extends BaseIntegrationTest {
     @Test
     void createGame_validInput_returnsCreatedGame() throws Exception {
         var gameCreationData = GameCreationData.builder()
-                                               .name(VALID_GAME_NAME)
+                                               .username(DEFAULT_USERNAME)
                                                .rowsCount(VALID_ROWS_COUNT)
                                                .columnsCount(VALID_COLUMNS_COUNT)
                                                .minesCount(VALID_MINE_COUNT)
@@ -94,7 +93,7 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .withContent(gameCreationData)
             .withExpectedStatus(status().isCreated())
             .andExpect(jsonPath("$.id", is(notNullValue())))
-            .andExpect(jsonPath("$.name", is(gameCreationData.getName())))
+            .andExpect(jsonPath("$.username", is(gameCreationData.getUsername())))
             .andExpect(jsonPath("$.modified").doesNotExist())
             .andExpect(jsonPath("$.outcome").doesNotExist())
             .andExpect(jsonPath("$.board.rowsCount", is(gameCreationData.getRowsCount())))
@@ -106,10 +105,10 @@ class GameIntegrationTest extends BaseIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("invalidGameCreationData")
-    void createGame_invalidInput_throwsBadRequest(String name, Integer rows, Integer columns, Integer minesCount,
+    void createGame_invalidInput_throwsBadRequest(String username, Integer rows, Integer columns, Integer minesCount,
                                                   String expectedErrorMessage) {
         var gameCreationData = GameCreationData.builder()
-                                               .name(name)
+                                               .username(username)
                                                .rowsCount(rows)
                                                .columnsCount(columns)
                                                .minesCount(minesCount)
@@ -294,45 +293,45 @@ class GameIntegrationTest extends BaseIntegrationTest {
     
     private static Stream<Arguments> invalidGameCreationData() {
         return Stream.of(
-            Arguments.of(null, VALID_ROWS_COUNT, VALID_COLUMNS_COUNT, VALID_MINE_COUNT, "'name' must not be empty"),
+            Arguments.of(null, VALID_ROWS_COUNT, VALID_COLUMNS_COUNT, VALID_MINE_COUNT, "'username' must not be empty"),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          Integer.MIN_VALUE,
                          VALID_COLUMNS_COUNT,
                          VALID_MINE_COUNT,
                          format(MIN_MSG_PATTERN, "rowsCount", 2)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          Integer.MAX_VALUE,
                          VALID_COLUMNS_COUNT,
                          VALID_MINE_COUNT,
                          format(MAX_MSG_PATTERN, "rowsCount", 16)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          VALID_ROWS_COUNT,
                          Integer.MIN_VALUE,
                          VALID_MINE_COUNT,
                          format(MIN_MSG_PATTERN, "columnsCount", 2)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          VALID_ROWS_COUNT,
                          Integer.MAX_VALUE,
                          VALID_MINE_COUNT,
                          format(MAX_MSG_PATTERN, "columnsCount", 30)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          VALID_ROWS_COUNT,
                          VALID_COLUMNS_COUNT,
                          Integer.MIN_VALUE,
                          format(MIN_MSG_PATTERN, "minesCount", 1)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          VALID_ROWS_COUNT,
                          VALID_COLUMNS_COUNT,
                          Integer.MAX_VALUE,
                          format(MAX_MSG_PATTERN, "minesCount", 435)),
 
-            Arguments.of(VALID_GAME_NAME,
+            Arguments.of(DEFAULT_USERNAME,
                          VALID_ROWS_COUNT,
                          VALID_COLUMNS_COUNT, VALID_ROWS_COUNT * VALID_COLUMNS_COUNT, NUMBER_OF_MINES_MSG)
         );
