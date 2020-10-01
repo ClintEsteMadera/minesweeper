@@ -67,6 +67,25 @@ or
 ```
 if you want to leave the application suspended until you connect your debugger to the port it is listening on (5005).
 
+## Continuous Integration / Deployment
+
+This project has been configured to be built in [CircleCI](https://circleci.com/) on every push to the `master` branch.
+
+<p align="center">
+    <img src="docs/circle-ci.png">
+</p>
+
+The project gets built, packaged, unit and integration tested, running also test coverage (which is currently at ~ 90%).
+If all that passes, it gets automatically deployed to Heroku.
+
+<p align="center">
+    <img src="docs/minesweeper-test-coverage.png">
+</p>
+
+<p align="center">
+    <img src="docs/heroku.png">
+</p>
+
 ## Examples of manual tests against the API
 
 ### Create a game
@@ -195,6 +214,10 @@ Similarly, if we proceed to further update the cells \[0, 1\] and \[1, 0\], we w
 
 For further information about this API contract, please refer to the self-hosted [Swagger UI](https://minesweeper2020.herokuapp.com/docs/api).
 
+<p align="center">
+    <img src="docs/swagger-ui.png">
+</p>
+
 ## Run the application on the cloud
 
 The REST API is hosted at https://minesweeper2020.herokuapp.com. You can use any HTTP client such as Postman or play with
@@ -207,6 +230,10 @@ The Open API v3 descriptor for this API can be found [here](https://minesweeper2
 I have forked [an open source project](https://github.com/DylanAttal/react-minesweeper) that implemented a front-end for
 a REST-based Minesweeper that was pretty similar to this API. The code is [here](https://github.com/ClintEsteMadera/react-minesweeper)
 and the game is also deployed in Heroku and can be accessed and played [here](https://minesweeper-ui.herokuapp.com/).
+
+<p align="center">
+    <img src="docs/front-end.png">
+</p>
 
 ## Javascript SDK for this API
 
