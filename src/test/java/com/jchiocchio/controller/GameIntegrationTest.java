@@ -11,6 +11,7 @@ import com.jchiocchio.dto.CellUpdateAction;
 import com.jchiocchio.dto.GameCreationData;
 import com.jchiocchio.dto.GameUpdate;
 import com.jchiocchio.model.Cell;
+import com.jchiocchio.model.Flag;
 import com.jchiocchio.model.Game;
 import com.jchiocchio.model.GameOutcome;
 
@@ -31,9 +32,10 @@ import static com.jchiocchio.dto.CellUpdateAction.ADD_RED_FLAG;
 import static com.jchiocchio.dto.CellUpdateAction.REVEAL;
 import static com.jchiocchio.dto.CellUpdateAction.UNFLAG;
 import static com.jchiocchio.entityfactory.GameTestEntityFactory.DEFAULT_USERNAME;
+import static com.jchiocchio.model.Flag.QUESTION_MARK;
+import static com.jchiocchio.model.Flag.RED_FLAG;
 import static java.lang.String.format;
 import static java.time.LocalDateTime.now;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.exparity.hamcrest.date.LocalDateTimeMatchers.within;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -100,9 +102,27 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .andExpect(jsonPath("$.board.columnsCount", is(gameCreationData.getColumnsCount())))
             .andExpect(jsonPath("$.board.minesCount", is(gameCreationData.getMinesCount())))
             .perform()
-            .andDo(mvcResult -> expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.created"));
+            .andDo(mvcResult -> expectTimestampToBe20SecondsFrom(now(), mvcResult, "$.created"));
     }
 
+    @Test
+    void createGame_ForANonExistentUser_throwsNotFound() {
+        var nonExistentUsername = "non existent user";
+
+        var gameCreationData = GameCreationData.builder()
+                                               .username(nonExistentUsername)
+                                               .rowsCount(VALID_ROWS_COUNT)
+                                               .columnsCount(VALID_COLUMNS_COUNT)
+                                               .minesCount(VALID_MINE_COUNT)
+                                               .build();
+
+        post()
+            .withContent(gameCreationData)
+            .withExpectedStatus(status().isNotFound())
+            .andExpectErrorMessages(format("User %s does not exist", nonExistentUsername))
+            .perform();
+    }
+    
     @ParameterizedTest
     @MethodSource("invalidGameCreationData")
     void createGame_invalidInput_throwsBadRequest(String username, Integer rows, Integer columns, Integer minesCount,
@@ -219,10 +239,10 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .withContent(revealCellAtRow1Column1)
             .withExpectedStatus(status().isOk())
             .perform();
-        
+
         // secondly: attempt to reveal the same cell => returns 400
         var actionOnRevealedCell = GameUpdate.builder().row(1).column(1).cellUpdateAction(action).build();
-        
+
         patchById(game.getId())
             .withContent(actionOnRevealedCell)
             .withExpectedStatus(status().isBadRequest())
@@ -241,6 +261,41 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .withContent(unflagUnflaggedCell)
             .withExpectedStatus(status().isBadRequest())
             .andExpectErrorMessages(CANNOT_UNFLAG_AN_UNFLAGGED_CELL_MSG)
+            .perform();
+    }
+
+    @ParameterizedTest
+    @MethodSource("flagOperations")
+    void updateGame_flaggingACell_returnsFlaggedCell(CellUpdateAction action, Flag expectedFlag) {
+        Game game = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
+
+        var flagAnUnflaggedCell = GameUpdate.builder().row(1).column(1).cellUpdateAction(action).build();
+
+        patchById(game.getId())
+            .withContent(flagAnUnflaggedCell)
+            .withExpectedStatus(status().isOk())
+            .andExpect(jsonPath("$.board.cells[1][1].flag", is(expectedFlag.name())))
+            .perform();
+    }
+
+    @Test
+    void updateGame_unflaggingAFlaggedCell_returnsUnflaggedCell() {
+        Game game = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
+
+        var flagAnUnflaggedCell = GameUpdate.builder().row(1).column(1).cellUpdateAction(ADD_RED_FLAG).build();
+
+        // first flag the cell
+        patchById(game.getId())
+            .withContent(flagAnUnflaggedCell)
+            .withExpectedStatus(status().isOk())
+            .perform();
+
+        var unflagTheSameCell = GameUpdate.builder().row(1).column(1).cellUpdateAction(UNFLAG).build();
+
+        patchById(game.getId())
+            .withContent(unflagTheSameCell)
+            .withExpectedStatus(status().isOk())
+            .andExpect(jsonPath("$.board.cells[1][1].flag").doesNotExist())
             .perform();
     }
 
@@ -295,18 +350,17 @@ class GameIntegrationTest extends BaseIntegrationTest {
     }
 
     private void expectLastModificationTimestampToHaveBeenRecentlyUpdated(MvcResult mvcResult) {
-        this.expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.modified");
+        this.expectTimestampToBe20SecondsFrom(now(), mvcResult, "$.modified");
     }
-    
+
     @SneakyThrows
-    private void expectTimestampToBeWithin(long period, ChronoUnit unit, LocalDateTime from, MvcResult mvcResult,
-                                           String propertyPath) {
+    private void expectTimestampToBe20SecondsFrom(LocalDateTime from, MvcResult mvcResult, String propertyPath) {
         String response = mvcResult.getResponse().getContentAsString();
         final LocalDateTime parsedTimestamp = LocalDateTime.parse(JsonPath.parse(response).read(propertyPath));
 
-        assertThat(parsedTimestamp, within(period, unit, from));
+        assertThat(parsedTimestamp, within(20, ChronoUnit.SECONDS, from));
     }
-    
+
     private static Stream<Arguments> invalidGameCreationData() {
         return Stream.of(
             Arguments.of(null, VALID_ROWS_COUNT, VALID_COLUMNS_COUNT, VALID_MINE_COUNT, "'username' must not be empty"),
@@ -364,5 +418,11 @@ class GameIntegrationTest extends BaseIntegrationTest {
             Arguments.of(ADD_QUESTION_MARK, FLAG_A_REVEALED_CELL_MSG),
             Arguments.of(ADD_RED_FLAG, FLAG_A_REVEALED_CELL_MSG),
             Arguments.of(REVEAL, REVEAL_AND_ALREADY_REVEALED_CELL_MSG));
+    }
+
+    private static Stream<Arguments> flagOperations() {
+        return Stream.of(
+            Arguments.of(ADD_QUESTION_MARK, QUESTION_MARK),
+            Arguments.of(ADD_RED_FLAG, RED_FLAG));
     }
 }
