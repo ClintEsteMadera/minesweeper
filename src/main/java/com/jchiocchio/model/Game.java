@@ -1,5 +1,6 @@
 package com.jchiocchio.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,6 +10,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jchiocchio.dto.GameDTO;
@@ -43,11 +46,27 @@ public class Game {
     private Board board;
 
     @Column
+    private LocalDateTime created;
+
+    @Column
+    private LocalDateTime modified;
+    
+    @Column
     @Enumerated(EnumType.STRING)
     private GameOutcome outcome;
 
     @JsonIgnore
     public boolean isFinished() {
         return this.outcome != null;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        created = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        modified = LocalDateTime.now();
     }
 }

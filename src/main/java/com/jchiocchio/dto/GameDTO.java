@@ -1,5 +1,6 @@
 package com.jchiocchio.dto;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,6 +19,10 @@ public class GameDTO {
     private String name;
 
     private BoardDTO board;
+
+    private LocalDateTime created;
+
+    private LocalDateTime modified;
 
     private GameOutcome outcome;
 }

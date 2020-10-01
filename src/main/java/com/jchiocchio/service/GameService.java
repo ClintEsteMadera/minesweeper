@@ -45,6 +45,6 @@ public class GameService {
 
         gameUpdate.getCellUpdateAction().apply(cell, game);
 
-        return gameRepository.save(game);
+        return gameRepository.saveAndFlush(game);
     }
 }

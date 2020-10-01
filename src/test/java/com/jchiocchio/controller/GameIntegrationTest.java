@@ -1,9 +1,12 @@
 package com.jchiocchio.controller;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import com.jayway.jsonpath.JsonPath;
 import com.jchiocchio.dto.CellUpdateAction;
 import com.jchiocchio.dto.GameCreationData;
 import com.jchiocchio.dto.GameUpdate;
@@ -19,12 +22,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.web.servlet.MvcResult;
+
+import lombok.SneakyThrows;
 
 import static com.jchiocchio.dto.CellUpdateAction.ADD_QUESTION_MARK;
 import static com.jchiocchio.dto.CellUpdateAction.ADD_RED_FLAG;
 import static com.jchiocchio.dto.CellUpdateAction.REVEAL;
 import static com.jchiocchio.dto.CellUpdateAction.UNFLAG;
 import static java.lang.String.format;
+import static java.time.LocalDateTime.now;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.exparity.hamcrest.date.LocalDateTimeMatchers.within;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -80,16 +90,19 @@ class GameIntegrationTest extends BaseIntegrationTest {
                                                .minesCount(VALID_MINE_COUNT)
                                                .build();
 
-        post()
+        var mvcResult = post()
             .withContent(gameCreationData)
             .withExpectedStatus(status().isCreated())
             .andExpect(jsonPath("$.id", is(notNullValue())))
             .andExpect(jsonPath("$.name", is(gameCreationData.getName())))
+            .andExpect(jsonPath("$.modified").doesNotExist())
             .andExpect(jsonPath("$.outcome").doesNotExist())
             .andExpect(jsonPath("$.board.rowsCount", is(gameCreationData.getRowsCount())))
             .andExpect(jsonPath("$.board.columnsCount", is(gameCreationData.getColumnsCount())))
             .andExpect(jsonPath("$.board.minesCount", is(gameCreationData.getMinesCount())))
-            .perform();
+            .perform().andReturn();
+
+        expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.created");
     }
 
     @ParameterizedTest
@@ -129,11 +142,13 @@ class GameIntegrationTest extends BaseIntegrationTest {
 
         expectedGame.setOutcome(GameOutcome.WON);
 
-        patchById(game.getId())
+        var mvcResult = patchById(game.getId())
             .withContent(gameUpdate)
             .withExpectedStatus(status().isOk())
             .andExpectJsonContentOf(expectedGame)
-            .perform();
+            .perform().andReturn();
+
+        expectLastModificationTimestampToHaveBeenRecentlyUpdated(mvcResult);
     }
 
     @Test
@@ -150,11 +165,13 @@ class GameIntegrationTest extends BaseIntegrationTest {
         expectedBoard.revealAllMines();
         expectedGame.setOutcome(GameOutcome.LOST);
 
-        patchById(game.getId())
+        var mvcResult = patchById(game.getId())
             .withContent(gameUpdate)
             .withExpectedStatus(status().isOk())
             .andExpectJsonContentOf(expectedGame)
-            .perform();
+            .perform().andReturn();
+
+        expectLastModificationTimestampToHaveBeenRecentlyUpdated(mvcResult);
     }
 
     @Test
@@ -265,6 +282,19 @@ class GameIntegrationTest extends BaseIntegrationTest {
         return game;
     }
 
+    private void expectLastModificationTimestampToHaveBeenRecentlyUpdated(MvcResult mvcResult) {
+        this.expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.modified");
+    }
+    
+    @SneakyThrows
+    private void expectTimestampToBeWithin(long period, ChronoUnit unit, LocalDateTime from, MvcResult mvcResult,
+                                           String propertyPath) {
+        String response = mvcResult.getResponse().getContentAsString();
+        final LocalDateTime parsedTimestamp = LocalDateTime.parse(JsonPath.parse(response).read(propertyPath));
+
+        assertThat(parsedTimestamp, within(period, unit, from));
+    }
+    
     private static Stream<Arguments> invalidGameCreationData() {
         return Stream.of(
             Arguments.of(null, VALID_ROWS_COUNT, VALID_COLUMNS_COUNT, VALID_MINE_COUNT, "'name' must not be empty"),
