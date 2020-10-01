@@ -60,8 +60,8 @@ workflows:
     jobs:
       - build-and-test:
           filters:
-            tags:
-              ignore: /.*/
+            branches:
+              ignore: master
 
   deploy-to-staging:
     jobs:
