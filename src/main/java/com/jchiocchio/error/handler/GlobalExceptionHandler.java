@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -91,6 +92,19 @@ class GlobalExceptionHandler {
     @ExceptionHandler(value = EntityNotFoundException.class)
     public ApplicationError handleEntityNotFound(HttpServletRequest req, EntityNotFoundException e) {
         return newApplicationErrorNoExceptionLogging(req, e.getMessage());
+    }
+
+    @ExceptionHandler(value = JpaObjectRetrievalFailureException.class)
+    public ResponseEntity<ApplicationError> handleJpaObjectRetrievalFailure(HttpServletRequest req,
+                                                                            JpaObjectRetrievalFailureException e) {
+        final Throwable rootCause = ExceptionUtils.getRootCause(e);
+
+        if (rootCause instanceof EntityNotFoundException) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                 .body(this.handleEntityNotFound(req, (EntityNotFoundException) rootCause));
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                             .body(newApplicationErrorLoggingTheException(req, rootCause.getMessage(), rootCause));
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)

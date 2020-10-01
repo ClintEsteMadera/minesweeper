@@ -70,7 +70,7 @@ public class Cell implements Serializable {
     @Transient
     public void flag(Flag flag) {
         if (flag == null) {
-            checkArgument(this.isFlagged(), "Cannot unflag an unflagged cell.");
+            checkArgument(this.isFlagged(), "Cannot unflag an unflagged cell");
         } else {
             checkArgument(!this.isRevealed(), "Cannot flag a revealed cell");
         }

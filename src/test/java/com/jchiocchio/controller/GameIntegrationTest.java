@@ -1,6 +1,7 @@
 package com.jchiocchio.controller;
 
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.jchiocchio.dto.CellUpdateAction;
@@ -22,6 +23,7 @@ import org.mockito.quality.Strictness;
 import static com.jchiocchio.dto.CellUpdateAction.ADD_QUESTION_MARK;
 import static com.jchiocchio.dto.CellUpdateAction.ADD_RED_FLAG;
 import static com.jchiocchio.dto.CellUpdateAction.REVEAL;
+import static com.jchiocchio.dto.CellUpdateAction.UNFLAG;
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -61,6 +63,8 @@ class GameIntegrationTest extends BaseIntegrationTest {
     private static final String FLAG_A_REVEALED_CELL_MSG = "Cannot flag a revealed cell";
 
     private static final String REVEAL_AND_ALREADY_REVEALED_CELL_MSG = "Cannot reveal and already revealed cell";
+
+    private static final String CANNOT_UNFLAG_AN_UNFLAGGED_CELL_MSG = "Cannot unflag an unflagged cell";
 
     @Override
     String getBasePath() {
@@ -210,6 +214,31 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .withContent(actionOnRevealedCell)
             .withExpectedStatus(status().isBadRequest())
             .andExpectErrorMessages(expectedMessage)
+            .perform();
+    }
+
+    @Test
+    void updateGame_unflaggingAnUnflaggedCell_throwsBadRequest() {
+        Game game = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
+
+        // unflagging an unflagged cell => returns 400
+        var unflagUnflaggedCell = GameUpdate.builder().row(1).column(1).cellUpdateAction(UNFLAG).build();
+
+        patchById(game.getId())
+            .withContent(unflagUnflaggedCell)
+            .withExpectedStatus(status().isBadRequest())
+            .andExpectErrorMessages(CANNOT_UNFLAG_AN_UNFLAGGED_CELL_MSG)
+            .perform();
+    }
+
+    @Test
+    void updateGame_nonExistingGame_throwsNotFound() {
+        // non-existent Game ID => returns 404
+        var validUpdateAction = GameUpdate.builder().row(1).column(1).cellUpdateAction(REVEAL).build();
+
+        patchById(UUID.randomUUID())
+            .withContent(validUpdateAction)
+            .withExpectedStatus(status().isNotFound())
             .perform();
     }
 
