@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,18 +38,21 @@ public class GameController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(description = "Creates a new game for an existing User")
     public Game createGame(
         @RequestBody @Validated(GameCreationData.ValidationGroup.class) GameCreationData creationData) {
         return gameService.createGame(creationData);
     }
 
     @PatchMapping("{gameId}")
+    @Operation(description = "Updates an existing Game, by performing individual updates to the board's cells")
     public Game updateGame(@PathVariable @NotNull(message = "'id' is required") UUID gameId,
                            @RequestBody @Valid GameUpdate update) {
         return gameService.updateGame(gameId, update);
     }
 
     @GetMapping("{gameId}")
+    @Operation(description = "Finds a Game by ID")
     public Game findGameById(@PathVariable @NotNull(message = "'id' is required") UUID gameId) {
         return gameService.findGameById(gameId);
     }
