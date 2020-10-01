@@ -1,29 +1,75 @@
-version: 2
+version: 2.1
+
+orbs:
+  gradle: circleci/gradle@2.2.0
+  heroku: circleci/heroku@0.0.10
+
+commands:
+  build-and-test:
+    steps:
+      - gradle/with_cache:
+          steps:
+            - run:
+                name: Unit + Integration Tests with coverage + Assemble Fat JAR
+                command: ./gradlew clean build
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+          when: always
+      - run:
+          name: Save JUnit + Jacoco Reports
+          command: |
+            mkdir -p ~/reports/
+            find . -regex ".*/build/reports/.*" -exec cp --parents {} ~/reports/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/reports
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - repo
+  deploy:
+    steps:
+      - attach_workspace:
+          at: ~/
+      - heroku/deploy-via-git
+
 jobs:
-  build:
-    docker:
-      - image: circleci/openjdk:11-jdk
+  build-and-test:
+    executor:
+      name: gradle/default
+      tag: 11.0.3
     working_directory: ~/repo
-
-    environment:
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
     steps:
       - checkout
+      - build-and-test
+  deploy:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk
+    steps:
+      - deploy
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.gradle" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+workflows:
+  version: 2
+  build_artifact:
+    jobs:
+      - build-and-test:
+          filters:
+            tags:
+              ignore: /.*/
 
-      - run: ./gradlew dependencies
-
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      - run: ./gradlew test
+  deploy-to-staging:
+    jobs:
+      - build-and-test:
+          filters: &staging_filters
+            branches:
+              only: master
+      - deploy:
+          filters: *staging_filters
+          requires:
+            - build-and-test
