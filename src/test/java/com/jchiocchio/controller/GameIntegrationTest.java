@@ -255,6 +255,22 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .perform();
     }
 
+    @Test
+    void findGameById_existingGame_returnsExpectedGamePayload() {
+        var existingGame = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
+
+        getById("%s", existingGame.getId())
+            .withExpectedStatus(status().isOk())
+            .perform();
+    }
+
+    @Test
+    void findGameById_nonExistentGame_throwsNotFound() {
+        getById("%s", UUID.randomUUID())
+            .withExpectedStatus(status().isNotFound())
+            .perform();
+    }
+
     /**
      * Creates a new game with the following board:
      * <pre>

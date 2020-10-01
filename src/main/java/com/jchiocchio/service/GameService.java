@@ -45,6 +45,10 @@ public class GameService {
         return game;
     }
 
+    public Game findGameById(UUID gameId) {
+        return gameRepository.findByIdOrThrow(gameId);
+    }
+
     public Game updateGame(UUID gameId, GameUpdate gameUpdate) {
         var game = gameRepository.findByIdOrThrow(gameId);
 
