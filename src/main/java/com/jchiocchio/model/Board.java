@@ -52,7 +52,7 @@ public class Board {
     @Transient
     public Cell getCellAt(int row, int column) {
         checkArgument(this.rowIsInRange(row), format("Row %d is not in range", row));
-        checkArgument(this.rowIsInRange(column), format("Column %d is not in range", column));
+        checkArgument(this.columnIsInRange(column), format("Column %d is not in range", column));
 
         return this.cells[row][column];
     }

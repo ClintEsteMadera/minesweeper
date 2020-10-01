@@ -82,7 +82,7 @@ class GameIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void createGame_validInput_returnsCreatedGame() {
+    void createGame_validInput_returnsCreatedGame() throws Exception {
         var gameCreationData = GameCreationData.builder()
                                                .name(VALID_GAME_NAME)
                                                .rowsCount(VALID_ROWS_COUNT)
@@ -90,7 +90,7 @@ class GameIntegrationTest extends BaseIntegrationTest {
                                                .minesCount(VALID_MINE_COUNT)
                                                .build();
 
-        var mvcResult = post()
+        post()
             .withContent(gameCreationData)
             .withExpectedStatus(status().isCreated())
             .andExpect(jsonPath("$.id", is(notNullValue())))
@@ -100,9 +100,8 @@ class GameIntegrationTest extends BaseIntegrationTest {
             .andExpect(jsonPath("$.board.rowsCount", is(gameCreationData.getRowsCount())))
             .andExpect(jsonPath("$.board.columnsCount", is(gameCreationData.getColumnsCount())))
             .andExpect(jsonPath("$.board.minesCount", is(gameCreationData.getMinesCount())))
-            .perform().andReturn();
-
-        expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.created");
+            .perform()
+            .andDo(mvcResult -> expectTimestampToBeWithin(20, SECONDS, now(), mvcResult, "$.created"));
     }
 
     @ParameterizedTest
@@ -124,7 +123,7 @@ class GameIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void updateGame_revealingAnEmptyCell_updatesGameAsExpected() {
+    void updateGame_revealingAnEmptyCell_updatesGameAsExpected() throws Exception {
         Game game = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
 
         // this should reveal everything except where the mine is at (0,0), thus, marking the game as "WON"
@@ -142,17 +141,16 @@ class GameIntegrationTest extends BaseIntegrationTest {
 
         expectedGame.setOutcome(GameOutcome.WON);
 
-        var mvcResult = patchById(game.getId())
+        patchById(game.getId())
             .withContent(gameUpdate)
             .withExpectedStatus(status().isOk())
             .andExpectJsonContentOf(expectedGame)
-            .perform().andReturn();
-
-        expectLastModificationTimestampToHaveBeenRecentlyUpdated(mvcResult);
+            .perform()
+            .andDo(this::expectLastModificationTimestampToHaveBeenRecentlyUpdated);
     }
 
     @Test
-    void updateGame_revealingAMine_marksTheGameAsLost() {
+    void updateGame_revealingAMine_marksTheGameAsLost() throws Exception {
         Game game = this.createAndPersistABasic3x3GameWithOneMineAtRowZeroColumnZero();
 
         // reveal the mine at (0,0) => game over
@@ -165,13 +163,12 @@ class GameIntegrationTest extends BaseIntegrationTest {
         expectedBoard.revealAllMines();
         expectedGame.setOutcome(GameOutcome.LOST);
 
-        var mvcResult = patchById(game.getId())
+        patchById(game.getId())
             .withContent(gameUpdate)
             .withExpectedStatus(status().isOk())
             .andExpectJsonContentOf(expectedGame)
-            .perform().andReturn();
-
-        expectLastModificationTimestampToHaveBeenRecentlyUpdated(mvcResult);
+            .perform()
+            .andDo(this::expectLastModificationTimestampToHaveBeenRecentlyUpdated);
     }
 
     @Test
