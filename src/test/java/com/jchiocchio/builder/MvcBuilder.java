@@ -26,7 +26,7 @@ public class MvcBuilder {
 
     private final MockMvc mvc;
 
-    private boolean applyDefaults;
+    private final boolean applyDefaults;
 
     private final MockHttpServletRequestBuilder requestBuilder;
 

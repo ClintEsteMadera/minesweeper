@@ -19,11 +19,6 @@ public class ApiTestClient {
     @Autowired
     private MapperHelper mapperHelper;
 
-    public MvcBuilder invokeAnyEndpoint() {
-        // prevent default asserts on the content type which, in this case, will not be set
-        return new MvcBuilder(MockMvcRequestBuilders.get("/api/any"), mvc, mapperHelper, false);
-    }
-
     public MvcBuilder getById(String basePath, String endpoint, UUID... ids) {
         return this.get(this.buildURI(basePath, endpoint, ids));
     }
