@@ -26,7 +26,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Entity
+@Entity(name = "games")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

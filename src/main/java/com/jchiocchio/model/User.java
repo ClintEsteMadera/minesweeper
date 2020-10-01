@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Entity
+@Entity(name = "users")
 @Builder
 @DTO(UserDTO.class)
 @NoArgsConstructor
