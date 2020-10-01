@@ -25,11 +25,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import lombok.Generated;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.lang.String.format;
 
 @Slf4j
+@Generated // we want to skip coverage on this class, as it's a good "catch-all" that is pretty hard to fully cover.
 @RestControllerAdvice
 class GlobalExceptionHandler {
 

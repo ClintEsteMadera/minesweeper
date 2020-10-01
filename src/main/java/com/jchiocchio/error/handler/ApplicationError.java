@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class ApplicationError {
 
-    private String[] messages;
+    private final String[] messages;
 
-    private String url;
+    private final String url;
 }
